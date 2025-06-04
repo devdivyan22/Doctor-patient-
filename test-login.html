@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        .info {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🏥 MedConnect Login Test</h1>
+        
+        <div class="info">
+            <h3>Test Instructions:</h3>
+            <p>Use these test credentials to access the portals:</p>
+            <ul>
+                <li><strong>Doctor Portal:</strong> doctor@medconnect.com (any password)</li>
+                <li><strong>Patient Portal:</strong> patient@medconnect.com (any password)</li>
+                <li><strong>Auto-detect:</strong> Any email with "doctor" goes to doctor portal</li>
+            </ul>
+        </div>
+
+        <button class="test-button" onclick="testDoctorLogin()">
+            👨‍⚕️ Test Doctor Login
+        </button>
+        
+        <button class="test-button" onclick="testPatientLogin()">
+            👤 Test Patient Login
+        </button>
+        
+        <button class="test-button" onclick="openLoginPage()">
+            🔐 Open Login Page
+        </button>
+        
+        <button class="test-button" onclick="clearAllData()">
+            🗑️ Clear All Data
+        </button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.innerHTML = message;
+        }
+
+        function testDoctorLogin() {
+            try {
+                const doctorUser = {
+                    email: 'doctor@medconnect.com',
+                    type: 'doctor',
+                    name: 'Dr. Sarah Wilson',
+                    specialization: 'Cardiology',
+                    license: 'MD12345'
+                };
+                
+                sessionStorage.setItem('currentUser', JSON.stringify(doctorUser));
+                showStatus('✅ Doctor session created! Redirecting to doctor portal...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'pages/doctor-portal.html';
+                }, 1500);
+                
+            } catch (error) {
+                showStatus('❌ Error creating doctor session: ' + error.message, 'error');
+            }
+        }
+
+        function testPatientLogin() {
+            try {
+                const patientUser = {
+                    email: 'patient@medconnect.com',
+                    type: 'patient',
+                    name: 'John Smith',
+                    dateOfBirth: '1985-06-15'
+                };
+                
+                sessionStorage.setItem('currentUser', JSON.stringify(patientUser));
+                showStatus('✅ Patient session created! Redirecting to patient portal...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'pages/patient-portal.html';
+                }, 1500);
+                
+            } catch (error) {
+                showStatus('❌ Error creating patient session: ' + error.message, 'error');
+            }
+        }
+
+        function openLoginPage() {
+            showStatus('🔄 Opening login page...', 'info');
+            setTimeout(() => {
+                window.location.href = 'pages/login.html';
+            }, 500);
+        }
+
+        function clearAllData() {
+            try {
+                sessionStorage.clear();
+                localStorage.clear();
+                showStatus('✅ All data cleared successfully!', 'success');
+            } catch (error) {
+                showStatus('❌ Error clearing data: ' + error.message, 'error');
+            }
+        }
+
+        // Check current session status
+        window.addEventListener('load', function() {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                showStatus(`ℹ️ Current session: ${user.name} (${user.type})`, 'info');
+            } else {
+                showStatus('ℹ️ No active session found.', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

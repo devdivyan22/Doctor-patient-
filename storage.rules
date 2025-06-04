@@ -1,0 +1,101 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User profile pictures
+    match /users/{userId}/profile/{allPaths=**} {
+      // Users can read and write their own profile pictures
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Other authenticated users can read profile pictures
+      allow read: if request.auth != null;
+    }
+    
+    // Patient documents
+    match /patients/{patientId}/documents/{allPaths=**} {
+      // Patients can read and write their own documents
+      allow read, write: if request.auth != null && request.auth.uid == patientId;
+      
+      // Doctors can read patient documents (for medical purposes)
+      allow read: if request.auth != null && 
+        exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+      
+      // Doctors can write patient documents (uploading medical reports)
+      allow write: if request.auth != null && 
+        exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+    }
+    
+    // Doctor documents
+    match /doctors/{doctorId}/documents/{allPaths=**} {
+      // Doctors can read and write their own documents
+      allow read, write: if request.auth != null && request.auth.uid == doctorId;
+      
+      // Patients can read doctor documents (licenses, certificates for verification)
+      allow read: if request.auth != null && 
+        exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'patient';
+    }
+    
+    // Message attachments
+    match /messages/{conversationId}/{allPaths=**} {
+      // Users can read and write message attachments if they are part of the conversation
+      allow read, write: if request.auth != null && 
+        (conversationId.matches('.*' + request.auth.uid + '.*'));
+    }
+    
+    // Temporary uploads (for processing)
+    match /temp/{userId}/{allPaths=**} {
+      // Users can upload to their temp folder
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can read from their temp folder
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Auto-delete temp files after 24 hours (handled by Cloud Functions)
+    }
+    
+    // Public files (app assets, etc.)
+    match /public/{allPaths=**} {
+      // Anyone can read public files
+      allow read: if true;
+      
+      // Only admins can write public files (handled by admin SDK)
+      allow write: if false;
+    }
+    
+    // Validation functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidFileSize() {
+      // 10MB limit for most files
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidDocumentFile() {
+      return request.resource.contentType in [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+    }
+    
+    // Apply file size validation to all uploads
+    match /{allPaths=**} {
+      allow write: if isValidFileSize();
+    }
+  }
+}

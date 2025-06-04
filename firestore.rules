@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      // Users can read and write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Doctors can read patient profiles (for appointments and medical records)
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+      
+      // Patients can read doctor profiles (for appointments)
+      allow read: if request.auth != null && 
+        resource.data.userType == 'doctor';
+    }
+    
+    // Appointments collection
+    match /appointments/{appointmentId} {
+      // Users can read appointments where they are either doctor or patient
+      allow read: if request.auth != null && 
+        (resource.data.doctorId == request.auth.uid || 
+         resource.data.patientId == request.auth.uid);
+      
+      // Doctors can create, update appointments for their patients
+      allow create, update: if request.auth != null && 
+        request.auth.uid == resource.data.doctorId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+      
+      // Patients can create appointments (booking)
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.patientId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'patient';
+      
+      // Patients can update their own appointments (limited fields)
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.patientId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'patient' &&
+        // Only allow updating status to 'cancelled'
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        request.resource.data.status == 'cancelled';
+      
+      // Doctors can delete appointments
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.doctorId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+    }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      // Users can read messages where they are sender or receiver
+      allow read: if request.auth != null && 
+        (resource.data.senderId == request.auth.uid || 
+         resource.data.receiverId == request.auth.uid);
+      
+      // Users can create messages where they are the sender
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId;
+      
+      // Users can update messages they sent (for editing) or received (for marking as read)
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId);
+      
+      // Users can delete messages they sent
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.senderId;
+    }
+    
+    // Medical records collection
+    match /medical_records/{recordId} {
+      // Patients can read their own medical records
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.patientId;
+      
+      // Doctors can read medical records for their patients
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.doctorId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+      
+      // Only doctors can create and update medical records
+      allow create, update: if request.auth != null && 
+        request.auth.uid == request.resource.data.doctorId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+      
+      // Only doctors can delete medical records they created
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.doctorId &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'doctor';
+    }
+    
+    // Helper function to check if user exists and get their type
+    function getUserType(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.userType;
+    }
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is doctor
+    function isDoctor() {
+      return isAuthenticated() && getUserType(request.auth.uid) == 'doctor';
+    }
+    
+    // Helper function to check if user is patient
+    function isPatient() {
+      return isAuthenticated() && getUserType(request.auth.uid) == 'patient';
+    }
+  }
+}

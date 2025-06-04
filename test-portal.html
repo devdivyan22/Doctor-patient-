@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Portal Access</title>
+</head>
+<body>
+    <h1>Portal Test</h1>
+    <button onclick="testDoctorLogin()">Test Doctor Portal</button>
+    <button onclick="testPatientLogin()">Test Patient Portal</button>
+    <button onclick="clearSession()">Clear Session</button>
+
+    <script>
+        function testDoctorLogin() {
+            const doctorUser = {
+                email: 'doctor@medconnect.com',
+                type: 'doctor',
+                name: 'Dr. Sarah Wilson',
+                specialization: 'Cardiology',
+                license: 'MD12345'
+            };
+            
+            sessionStorage.setItem('currentUser', JSON.stringify(doctorUser));
+            window.location.href = 'pages/doctor-portal.html';
+        }
+
+        function testPatientLogin() {
+            const patientUser = {
+                email: 'patient@medconnect.com',
+                type: 'patient',
+                name: 'John Smith',
+                dateOfBirth: '1985-06-15'
+            };
+            
+            sessionStorage.setItem('currentUser', JSON.stringify(patientUser));
+            window.location.href = 'pages/patient-portal.html';
+        }
+
+        function clearSession() {
+            sessionStorage.clear();
+            localStorage.clear();
+            alert('Session cleared');
+        }
+    </script>
+</body>
+</html>

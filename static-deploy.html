@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediConnect2 - Static Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .status {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 MediConnect2</h1>
+        <p>Healthcare Management Platform</p>
+    </div>
+
+    <div class="status">
+        <h3>✅ Static Deployment Test</h3>
+        <p>If you can see this page, static hosting is working perfectly!</p>
+        <p><strong>Deployment Time:</strong> <span id="deployTime"></span></p>
+    </div>
+
+    <div class="error">
+        <h3>🔧 Next.js Deployment Issues</h3>
+        <p>If you're seeing this instead of the full Next.js app, there might be:</p>
+        <ul>
+            <li>Runtime errors in the Next.js application</li>
+            <li>Environment variable issues</li>
+            <li>Module import problems</li>
+            <li>Memory or timeout issues</li>
+        </ul>
+    </div>
+
+    <h2>🚀 Deployment Options</h2>
+    
+    <h3>Option 1: Fix Next.js Deployment</h3>
+    <p>Check Vercel function logs for specific errors and fix them.</p>
+    
+    <h3>Option 2: Static Export</h3>
+    <p>Deploy as a static site using Next.js static export feature.</p>
+    
+    <h3>Option 3: Alternative Platforms</h3>
+    <p>Try deploying to Netlify, Railway, or other platforms.</p>
+
+    <h2>🔗 Quick Links</h2>
+    <a href="/" class="button">Home</a>
+    <a href="/test" class="button">Test Page</a>
+    <a href="/firebase-demo" class="button">Firebase Demo</a>
+
+    <h2>📊 Firebase Configuration Test</h2>
+    <div id="firebaseTest">Testing Firebase connection...</div>
+
+    <script type="module">
+        // Set deployment time
+        document.getElementById('deployTime').textContent = new Date().toLocaleString();
+
+        // Test Firebase configuration
+        try {
+            import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js').then(({ initializeApp }) => {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAKQJGGLrmAYFlPupbM8CKNi7KfNdvwpVw",
+                    authDomain: "mediconnect2-9b972.firebaseapp.com",
+                    projectId: "mediconnect2-9b972",
+                    storageBucket: "mediconnect2-9b972.firebasestorage.app",
+                    messagingSenderId: "41487655251",
+                    appId: "1:41487655251:web:13103c4f6bd9961097c1a6",
+                    measurementId: "G-QX5DHDW9EE"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                document.getElementById('firebaseTest').innerHTML = 
+                    '<div style="color: green;">✅ Firebase configuration loaded successfully!</div>';
+            });
+        } catch (error) {
+            document.getElementById('firebaseTest').innerHTML = 
+                '<div style="color: red;">❌ Firebase configuration failed: ' + error.message + '</div>';
+        }
+    </script>
+</body>
+</html>
